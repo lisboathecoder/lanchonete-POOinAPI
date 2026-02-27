@@ -50,8 +50,15 @@ model Pedido {
     total      Float
     cliente    Cliente  @relation(fields: [clienteId], references: [id])
     itens      ItemPedido[]
+    status    StatusPedido @default(ABERTO)
 
     @@map("pedido")
+}
+
+enum StatusPedido {
+    ABERTO
+    PAGO
+    CANCELADO
 }
 
 model ItemPedido {
