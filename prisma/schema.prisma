@@ -28,12 +28,20 @@ model Produto {
     nome      String
     descricao String?
     preco     Float
-    categoria Categoria @default(LANCHE)
+    categoria Categoria
     ativo     Boolean @default(true)
     itens     ItemPedido[]
 
     @@map("produto")
 } 
+
+enum Categoria {
+  LANCHE
+  BEBIDA
+  SOBREMESA
+  COMBO
+}
+
 
 model Pedido {
     id        Int      @id @default(autoincrement())
@@ -44,13 +52,6 @@ model Pedido {
     itens      ItemPedido[]
 
     @@map("pedido")
-}
-
-enum Categoria {
-    LANCHE
-    BEBIDA
-    SOBREMESA
-    PRATO_PRINCIPAL
 }
 
 model ItemPedido {
