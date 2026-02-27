@@ -20,14 +20,14 @@ model Cliente {
     pedidos Pedido[]
     ativo Boolean @default(true)
 
-    @@map("exemplo")
+    @@map("cliente")
 }
 
 model Produto {
     id        Int      @id @default(autoincrement())
     nome      String
     descricao String?
-    preco     Float
+    preco     Decimal @db.Decimal(10, 2)
     categoria Categoria
     ativo     Boolean @default(true)
     itens     ItemPedido[]
