@@ -1,7 +1,7 @@
 {
   "name": "restaurante-POOinAPI",
   "version": "1.0.0",
-  "description": "",
+  "description": "Api de lanchonete com POO.",
   "main": "server.js",
   "type": "module",
   "private": true,
@@ -9,7 +9,7 @@
     "dev": "cls && nodemon src/server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "lisboathecoder",
   "license": "MIT",
   "dependencies": {
     "@prisma/adapter-pg": "^7.3.0",
