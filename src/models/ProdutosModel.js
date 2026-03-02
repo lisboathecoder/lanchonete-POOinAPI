@@ -36,7 +36,25 @@ export default class ProdutosModel {
     }
 
     async deletar() {
-        return prisma.produto.delete({ where: { id: this.id } });
+        const itemPedidoAberto = await prisma.itemPedido.findFisrt({
+            where: {
+                produtoID: this.id,
+                pedido: {status: "Aberto"},
+            },
+        });
+
+        if (itemPedidoAberto) {
+            return {
+                status: 400,
+                error: "Não é possível deletar um produto vinculado a pedido aberto"
+            };
+        }
+
+        await prisma.produto.delete({
+            where: {id: this.id},
+        });
+        
+        return{status:200};
     }
 
     static async buscarTodos(filtros = {}) {
