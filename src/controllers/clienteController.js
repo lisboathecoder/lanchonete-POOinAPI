@@ -1,9 +1,9 @@
 import ClientesModel from "../models/ClientesModel.js";
 
 const buscarEnderecoPorCep = async (cep) => {
-    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-    const data = await response.json();
-    return data.erro ? null : data;
+  const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+  const data = await response.json();
+  return data.erro ? null : data;
 };
 
 export const criar = async (req, res) => {
@@ -28,10 +28,12 @@ export const criar = async (req, res) => {
     } = req.body;
 
     let endereco;
-    if(cep) {
+    if (cep) {
       endereco = await buscarEnderecoPorCep(cep);
       if (!endereco) {
-        return res.status(400).json({ error: "CEP inválido ou não encontrado." });
+        return res
+          .status(400)
+          .json({ error: "CEP inválido ou não encontrado." });
       }
     }
 
@@ -99,7 +101,7 @@ export const buscarTodos = async (req, res) => {
 
     if (nome) filtros.nome = nome;
     if (cpf) filtros.cpf = cpf;
-    if (ativo !== undefined) filtros.ativo = ativo === 'true';
+    if (ativo !== undefined) filtros.ativo = ativo === "true";
 
     const cliente = new ClientesModel();
     const registros = await cliente.buscarTodos(filtros);
@@ -108,7 +110,6 @@ export const buscarTodos = async (req, res) => {
       return res.status(200).json({ message: "Nenhum registro encontrado." });
     }
     res.json(registros);
-
   } catch (error) {
     console.error("Erro ao buscar:", error);
     res.status(500).json({ error: "Erro ao buscar registros." });
