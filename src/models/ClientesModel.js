@@ -45,24 +45,24 @@ export default class ClientesModel {
   }
 
   async buscarPorId() {
-        if (!this.id) throw new Error('ID não definido para busca.');
-        const registro = await prisma.cliente.findUnique({
-            where: { id: this.id },
-        });
-        if (!registro) return null;
-        this.id = registro.id;
-        this.nome = registro.nome;
-        this.telefone = registro.telefone;
-        this.email = registro.email;
-        this.cpf = registro.cpf;
-        this.cep = registro.cep;
-        this.logradouro = registro.logradouro;
-        this.bairro = registro.bairro;
-        this.localidade = registro.localidade;
-        this.uf = registro.uf;
-        this.pedidos = registro.pedidos;
-        this.ativo = registro.ativo;
-               return this;
+    if (!this.id) throw new Error("ID não definido para busca.");
+    const registro = await prisma.cliente.findUnique({
+      where: { id: this.id },
+    });
+    if (!registro) return null;
+    this.id = registro.id;
+    this.nome = registro.nome;
+    this.telefone = registro.telefone;
+    this.email = registro.email;
+    this.cpf = registro.cpf;
+    this.cep = registro.cep;
+    this.logradouro = registro.logradouro;
+    this.bairro = registro.bairro;
+    this.localidade = registro.localidade;
+    this.uf = registro.uf;
+    this.pedidos = registro.pedidos;
+    this.ativo = registro.ativo;
+    return this;
   }
 
   async criar() {
@@ -134,5 +134,29 @@ export default class ClientesModel {
     const data = await prisma.cliente.findUnique({ where: { id: parsedId } });
     if (!data) return null;
     return new ClientesModel(data);
+  }
+
+  static async verificarTelefoneUnico(telefone) {
+    const parsedTelefone = Number(telefone);
+    if (Number.isNaN(parsedTelefone)) return false;
+
+    const cliente = await prisma.cliente.findUnique({
+      where: { telefone: parsedTelefone },
+      select: { id: true },
+    });
+
+    return Boolean(cliente);
+  }
+
+  static async verificarCpfUnico(cpf) {
+    const parsedCpf = Number(cpf);
+    if (Number.isNaN(parsedCpf)) return false;
+
+    const cliente = await prisma.cliente.findUnique({
+      where: { cpf: parsedCpf },
+      select: { id: true },
+    });
+
+    return Boolean(cliente);
   }
 }
