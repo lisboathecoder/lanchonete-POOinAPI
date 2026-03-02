@@ -12,8 +12,8 @@ export const criar = async (req, res) => {
         if (!nome) return res.status(400).json({ error: 'O campo "nome" é obrigatório!' });
         if (!categoria) return res.status(400).json({ error: 'O campo "categoria" é obrigatório!' });
         if (!preco) return res.status(400).json({ error: 'O campo "preco" é obrigatório!' });
-        if (disponivel === false) return res.status(400).json({error: 'O produto não pode ser adicionado com indiponível'});
-        
+        if (ativo === false) return res.status(400).json({error: 'O produto não pode ser adicionado com indisponível'});
+
         const parsedPrice = parseInt(preco);
         if (isNaN(parsedPrice)) {
             return res.status(400).json({ error: 'O preço precisa ser uma número válido'})
@@ -82,7 +82,7 @@ export const atualizar = async (req, res) => {
         if (!produtoExiste) {
             return res.status(404).json({ error: 'Registro não encontrado para atualizar.' });
         }
-        
+
         const data = await produto.atualizar();
         res.json({ message: `O registro "${data.nome}" foi atualizado com sucesso!`, data });
     } catch (error) {
