@@ -1,5 +1,7 @@
 import prisma from "../utils/prismaClient.js";
 
+
+
 export default class ClientesModel {
   constructor({
     id = null,
@@ -134,5 +136,29 @@ export default class ClientesModel {
     const data = await prisma.cliente.findUnique({ where: { id: parsedId } });
     if (!data) return null;
     return new ClientesModel(data);
+  }
+
+  static async verificarTelefoneUnico(telefone) {
+    const parsedTelefone = Number(telefone);
+    if (Number.isNaN(parsedTelefone)) return false;
+
+    const cliente = await prisma.cliente.findUnique({
+      where: { telefone: parsedTelefone },
+      select: { id: true },
+    });
+
+    return Boolean(cliente);
+  }
+
+  static async verificarCpfUnico(cpf) {
+    const parsedCpf = Number(cpf);
+    if (Number.isNaN(parsedCpf)) return false;
+
+    const cliente = await prisma.cliente.findUnique({
+      where: { cpf: parsedCpf },
+      select: { id: true },
+    });
+
+    return Boolean(cliente);
   }
 }
