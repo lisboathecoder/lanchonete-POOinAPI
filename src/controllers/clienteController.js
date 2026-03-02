@@ -1,5 +1,11 @@
 import ClientesModel from "../models/ClientesModel.js";
 
+const buscarEnderecoPorCep = async (cep) => {
+  const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+  const data = await response.json();
+  return data.erro ? null : data;
+};
+
 export const criar = async (req, res) => {
   try {
     if (!req.body) {
@@ -21,16 +27,41 @@ export const criar = async (req, res) => {
       ativo = true,
     } = req.body;
 
+    let endereco;
+    if (cep) {
+      endereco = await buscarEnderecoPorCep(cep);
+      if (!endereco) {
+        return res
+          .status(400)
+          .json({ error: "CEP inválido ou não encontrado." });
+      }
+    }
+
     if (!nome)
       return res.status(400).json({ error: 'O campo "nome" é obrigatório!' });
     if (!telefone)
       return res
         .status(400)
         .json({ error: 'O campo "telefone" é obrigatório!' });
+    const telefoneExiste = await ClientesModel.verificarTelefoneUnico(telefone);
+    if (telefoneExiste)
+      return res
+        .status(400)
+        .json({ error: "O telefone informado já está cadastrado!" });
     if (!email)
       return res.status(400).json({ error: 'O campo "email" é obrigatório!' });
     if (!cpf)
       return res.status(400).json({ error: 'O campo "cpf" é obrigatório!' });
+    if (isNaN(cpf))
+      return res
+        .status(400)
+        .json({ error: 'O campo "cpf" deve conter somente números!' });
+    const cpfExiste = await ClientesModel.verificarCpfUnico(cpf);
+    if (cpfExiste)
+      return res
+        .status(400)
+        .json({ error: "O CPF informado já está cadastrado!" });
+
     if (cpf.toString().trim().length !== 11)
       return res
         .status(400)
@@ -48,10 +79,10 @@ export const criar = async (req, res) => {
       email,
       cpf,
       cep,
-      logradouro,
-      bairro,
-      localidade,
-      uf,
+      logradouro: endereco?.logradouro || null,
+      bairro: endereco?.bairro || null,
+      localidade: endereco?.localidade || null,
+      uf: endereco?.uf || null,
       pedidos,
       ativo,
     });
@@ -63,11 +94,17 @@ export const criar = async (req, res) => {
     res.status(500).json({ error: "Erro interno ao salvar o registro." });
   }
 };
-
 export const buscarTodos = async (req, res) => {
   try {
+    const { nome, cpf, ativo } = req.query;
+    const filtros = {};
+
+    if (nome) filtros.nome = nome;
+    if (cpf) filtros.cpf = cpf;
+    if (ativo !== undefined) filtros.ativo = ativo === "true";
+
     const cliente = new ClientesModel();
-    const registros = await cliente.buscarTodos(req.query);
+    const registros = await cliente.buscarTodos(filtros);
 
     if (!registros || registros.length === 0) {
       return res.status(200).json({ message: "Nenhum registro encontrado." });
