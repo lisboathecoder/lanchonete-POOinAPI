@@ -31,7 +31,7 @@ export const criar = async (req, res) => {
       return res.status(400).json({ error: 'O campo "email" é obrigatório!' });
     if (!cpf)
       return res.status(400).json({ error: 'O campo "cpf" é obrigatório!' });
-    if (cpf.length !== 11)
+    if (cpf.toString().trim().length !== 11)
       return res
         .status(400)
         .json({ error: 'O campo "cpf" deve conter exatamente 11 dígitos!' });
