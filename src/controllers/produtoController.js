@@ -7,12 +7,12 @@ export const criar = async (req, res) => {
                 error: 'Corpo da requisição vazio. Envie os dados!',
             });
         }
-        const {nome, descricao, categoria, preco, ativo = true } = req.body;
+        const {nome, descricao, categoria, preco, disponivel = true } = req.body;
 
         if (!nome) return res.status(400).json({ error: 'O campo "nome" é obrigatório!' });
         if (!categoria) return res.status(400).json({ error: 'O campo "categoria" é obrigatório!' });
         if (!preco) return res.status(400).json({ error: 'O campo "preco" é obrigatório!' });
-        if (ativo === false) return res.status(400).json({error: 'O produto não pode ser adicionado com indisponível'});
+        if (disponivel === false) return res.status(400).json({error: 'O produto não pode ser adicionado com indisponível'});
 
         const parsedPrice = parseInt(preco);
         if (isNaN(parsedPrice)) {
