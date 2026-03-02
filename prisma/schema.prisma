@@ -9,10 +9,10 @@ datasource db {
 model Cliente {
     id        Int      @id @default(autoincrement())
     nome      String
-    telefone Int @unique
+    telefone Float @unique
     email String @unique
-    cpf Int @unique
-    cep Int
+    cpf Float @unique
+    cep Float
     logradouro String?
     bairro String?
     localidade String?
