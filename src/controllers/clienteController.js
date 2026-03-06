@@ -1,10 +1,7 @@
 import ClientesModel from "../models/ClientesModel.js";
+import buscarEnderecoPorCep from "../utils/viaCep.js";
+import { buscarClimaViaCep } from "../utils/clima.js";
 
-const buscarEnderecoPorCep = async (cep) => {
-  const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-  const data = await response.json();
-  return data.erro ? null : data;
-};
 
 export const criar = async (req, res) => {
   try {
@@ -37,6 +34,8 @@ export const criar = async (req, res) => {
       }
     }
 
+
+
     const cliente = new ClientesModel({
       nome,
       telefone,
@@ -52,7 +51,7 @@ export const criar = async (req, res) => {
     });
     const data = await cliente.criar();
 
-    res.status(201).json({ message: "Registro criado com sucesso!", data });
+    res.status(201).json({ message: "Registro criado com sucesso!"});
   } catch (error) {
     console.error("Erro ao criar:", error);
     res.status(500).json({ error: "Erro interno ao salvar o registro." });
@@ -97,6 +96,34 @@ export const buscarPorId = async (req, res) => {
   } catch (error) {
     console.error("Erro ao buscar:", error);
     res.status(500).json({ error: "Erro ao buscar registro." });
+ 
+  }
+};
+
+export const buscarClima = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .json({ error: "O ID enviado não é um número válido." });
+    }
+    const cliente = new ClientesModel({ id: parseInt(id) });
+    const data = await cliente.buscarPorId();
+    if (!data) {
+      return res.status(404).json({ error: "Registro não encontrado." });
+    }
+    if (!data.cep) {
+      return res
+        .status(400)
+        .json({ error: "O cliente não possui CEP cadastrado." });
+    }
+    const clima = await buscarClimaViaCep(data.cep);
+    res.json({ data, clima });
+  
+  } catch (error) {
+    console.error("Erro ao buscar clima:", error);
+    res.status(500).json({ error: "Erro ao buscar clima." });
   }
 };
 
