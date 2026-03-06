@@ -1,6 +1,7 @@
 import ClientesModel from "../models/ClientesModel.js";
 import buscarEnderecoPorCep from "../utils/viaCep.js";
-import { buscarCoordenadas, buscarClima }from "../utils/clima.js"
+import { buscarClimaViaCep } from "../utils/clima.js";
+
 
 export const criar = async (req, res) => {
   try {
@@ -31,16 +32,6 @@ export const criar = async (req, res) => {
           .status(400)
           .json({ error: "CEP inválido ou não encontrado." });
       }
-      const cidade = endereco.localidade;
-      const coordenadas = await buscarCoordenadas(cidade);
-      
-      let clima = null;
-      if (coordenadas) {
-        const climaData = await buscarClima(coordenadas.latitude, coordenadas.longitude);
-        if (climaData) {
-          clima = climaData;
-        }
-      }
     }
 
 
@@ -60,7 +51,7 @@ export const criar = async (req, res) => {
     });
     const data = await cliente.criar();
 
-    res.status(201).json({ message: "Registro criado com sucesso!", data });
+    res.status(201).json({ message: "Registro criado com sucesso!"});
   } catch (error) {
     console.error("Erro ao criar:", error);
     res.status(500).json({ error: "Erro interno ao salvar o registro." });
@@ -105,6 +96,34 @@ export const buscarPorId = async (req, res) => {
   } catch (error) {
     console.error("Erro ao buscar:", error);
     res.status(500).json({ error: "Erro ao buscar registro." });
+ 
+  }
+};
+
+export const buscarClima = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .json({ error: "O ID enviado não é um número válido." });
+    }
+    const cliente = new ClientesModel({ id: parseInt(id) });
+    const data = await cliente.buscarPorId();
+    if (!data) {
+      return res.status(404).json({ error: "Registro não encontrado." });
+    }
+    if (!data.cep) {
+      return res
+        .status(400)
+        .json({ error: "O cliente não possui CEP cadastrado." });
+    }
+    const clima = await buscarClimaViaCep(data.cep);
+    res.json({ data, clima });
+  
+  } catch (error) {
+    console.error("Erro ao buscar clima:", error);
+    res.status(500).json({ error: "Erro ao buscar clima." });
   }
 };
 
