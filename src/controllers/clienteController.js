@@ -1,10 +1,6 @@
 import ClientesModel from "../models/ClientesModel.js";
-
-const buscarEnderecoPorCep = async (cep) => {
-  const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-  const data = await response.json();
-  return data.erro ? null : data;
-};
+import buscarEnderecoPorCep from "../utils/viaCep.js";
+import { buscarCoordenadas, buscarClima }from "../utils/clima.js"
 
 export const criar = async (req, res) => {
   try {
@@ -35,7 +31,19 @@ export const criar = async (req, res) => {
           .status(400)
           .json({ error: "CEP inválido ou não encontrado." });
       }
+      const cidade = endereco.localidade;
+      const coordenadas = await buscarCoordenadas(cidade);
+      
+      let clima = null;
+      if (coordenadas) {
+        const climaData = await buscarClima(coordenadas.latitude, coordenadas.longitude);
+        if (climaData) {
+          clima = climaData;
+        }
+      }
     }
+
+
 
     const cliente = new ClientesModel({
       nome,
