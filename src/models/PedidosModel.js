@@ -1,6 +1,6 @@
 import prisma from "../utils/prismaClient.js";
 
-export default class PedidoModel {
+export default class PedidosModel {
   constructor({
     id = null,
     nome = null,
@@ -67,6 +67,6 @@ export default class PedidoModel {
       include: { produtos: true },
     });
     if (!data) return null;
-    return new PedidoModel(data);
+    return new PedidosModel(data);
   }
 }

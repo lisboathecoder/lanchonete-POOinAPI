@@ -81,7 +81,7 @@ export default class ProdutosModel {
          }
 
          if(filtro.precoMin || filtro.precoMax){
-            where.preco = {};
+            where.preco = {}
          }
 
          if(filtro.precoMin) {
