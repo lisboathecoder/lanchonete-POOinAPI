@@ -36,10 +36,12 @@ export default class ProdutosModel {
     }
 
     async deletar() {
-        const itemPedidoAberto = await prisma.itemPedido.findFisrt({
+        const itemPedidoAberto = await prisma.itemPedido.findFirst({
             where: {
                 produtoID: this.id,
-                pedido: {status: "Aberto"},
+                pedido: {
+                    status: "Aberto"
+                },
             },
         });
 
@@ -57,16 +59,45 @@ export default class ProdutosModel {
         return{status:200};
     }
 
-    static async buscarTodos(filtros = {}) {
+      static async buscarTodos(filtro = {}) {
         const where = {};
 
-        if (filtros.nome) where.nome = { contains: filtros.nome, mode: 'insensitive' };
-        if (filtros.categoria) where.categoria = { contains: filtros.categoria, mode: 'insensitive' };
-        if (filtros.disponivel !== undefined) where.disponivel = filtros.disponivel === 'true';
-        return prisma.produto.findMany({ where });
-    }
+        if(filtro.nome) {
+            where.nome= {
+                contains: filtro.nome,
+                mode: "insensitive"
+            };
+        }
+        if (filtro.categoria) {
+            where.categoria ={
+                contains: filtro.categoria,
+                mode: "insensitive"
+            };
+        }
 
-    static async buscarPorId(id) {
-        return prisma.produto.findUnique({ where: { id } });
-    }
+         if (filtro.disponivel !== undefined){
+            where.disponivel = filtro.disponivel === "true";
+           
+         }
+
+         if(filtro.precoMin || filtro.precoMax){
+            where.preco = {};
+         }
+
+         if(filtro.precoMin) {
+            where.preco.gte = parseFloat(filtro.precoMin);
+         }
+
+         if (filtro.precoMax) {
+            where.preco.lte = parseFloat(filtro.precoMax);
+         }
+         return prisma.produto.findMany({ where});
+         
+      }
+
+        static async buscarPorId(id) {
+            return prisma.produto.findUnique({
+                where: {id}
+            });
+        }
 }
