@@ -55,7 +55,7 @@ export default class ProdutosModel {
         await prisma.produto.delete({
             where: {id: this.id},
         });
-        
+
         return{status:200};
     }
 
