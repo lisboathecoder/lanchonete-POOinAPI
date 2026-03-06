@@ -53,7 +53,7 @@ export default class ProdutosModel {
         await prisma.produto.delete({
             where: {id: this.id},
         });
-        
+
         return{status:200};
     }
 
@@ -68,5 +68,10 @@ export default class ProdutosModel {
 
     static async buscarPorId(id) {
         return prisma.produto.findUnique({ where: { id } });
+
+
     }
+
+  
+
 }

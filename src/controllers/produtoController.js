@@ -9,10 +9,12 @@ export const criar = async (req, res) => {
         }
         const {nome, descricao, categoria, preco, disponivel = true } = req.body;
 
-        if (!nome) return res.status(400).json({ error: 'O campo "nome" é obrigatório!' });
+        if (!nome || nome.trim().length < 3) return res.status(400).json({ error: 'O campo "nome" é obrigatório!' });
         if (!categoria) return res.status(400).json({ error: 'O campo "categoria" é obrigatório!' });
-        if (!preco) return res.status(400).json({ error: 'O campo "preco" é obrigatório!' });
-        if (disponivel === false) return res.status(400).json({error: 'O produto não pode ser adicionado com indisponível'});
+        if (preco === undefined || preco <= 0) return res.status(400).json({ error: 'O "preco" deve ser maior que 0' });
+         if (descricao.length >= 255) return res.status(400).json({ error: 'O campo "descricao" é obrigatório!' });
+        if (disponivel === false) return res.status(400).json({ error: 'O produto não pode ser adicionado com indisponível' });
+
 
         const parsedPrice = parseInt(preco);
         if (isNaN(parsedPrice)) {
