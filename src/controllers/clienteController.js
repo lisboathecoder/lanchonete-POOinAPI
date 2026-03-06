@@ -1,6 +1,26 @@
 import ClientesModel from "../models/ClientesModel.js";
 import buscarEnderecoPorCep from "../utils/viaCep.js";
-import { buscarClimaViaCep } from "../utils/clima.js";
+import { buscarClimaViaCep, sugestaoClima } from "../utils/clima.js";
+
+const erroBancoIndisponivel = (error) => {
+  const mensagem = error?.message || "";
+
+  return (
+    error?.code === "ECONNREFUSED" ||
+    error?.name === "PrismaClientInitializationError" ||
+    mensagem.includes("ECONNREFUSED")
+  );
+};
+
+const responderErro = (res, error, mensagemPadrao) => {
+  if (erroBancoIndisponivel(error)) {
+    return res.status(503).json({
+      error: "Banco de dados indisponível no momento. Tente novamente em instantes.",
+    });
+  }
+
+  return res.status(500).json({ error: mensagemPadrao });
+};
 
 
 export const criar = async (req, res) => {
@@ -34,8 +54,6 @@ export const criar = async (req, res) => {
       }
     }
 
-
-
     const cliente = new ClientesModel({
       nome,
       telefone,
@@ -50,11 +68,20 @@ export const criar = async (req, res) => {
       ativo,
     });
     const data = await cliente.criar();
+    let clima = null;
 
-    res.status(201).json({ message: "Registro criado com sucesso!"});
+    if (data?.cep) {
+      try {
+        clima = await buscarClimaViaCep(data.cep);
+      } catch (error) {
+        clima = null;
+      }
+    }
+
+    res.status(201).json({ message: "Registro criado com sucesso!", data, clima });
   } catch (error) {
     console.error("Erro ao criar:", error);
-    res.status(500).json({ error: "Erro interno ao salvar o registro." });
+    return responderErro(res, error, "Erro interno ao salvar o registro.");
   }
 };
 export const buscarTodos = async (req, res) => {
@@ -75,7 +102,7 @@ export const buscarTodos = async (req, res) => {
     res.json(registros);
   } catch (error) {
     console.error("Erro ao buscar:", error);
-    res.status(500).json({ error: "Erro ao buscar registros." });
+    return responderErro(res, error, "Erro ao buscar registros.");
   }
 };
 
@@ -95,7 +122,7 @@ export const buscarPorId = async (req, res) => {
     res.json({ data });
   } catch (error) {
     console.error("Erro ao buscar:", error);
-    res.status(500).json({ error: "Erro ao buscar registro." });
+    return responderErro(res, error, "Erro ao buscar registro.");
  
   }
 };
@@ -119,11 +146,12 @@ export const buscarClima = async (req, res) => {
         .json({ error: "O cliente não possui CEP cadastrado." });
     }
     const clima = await buscarClimaViaCep(data.cep);
-    res.json({ data, clima });
+    const sugestao = sugestaoClima(clima);
+    res.json({ data, clima, sugestaoClima: sugestao });
   
   } catch (error) {
     console.error("Erro ao buscar clima:", error);
-    res.status(500).json({ error: "Erro ao buscar clima." });
+    return responderErro(res, error, "Erro ao buscar clima.");
   }
 };
 
@@ -164,7 +192,7 @@ export const atualizar = async (req, res) => {
     });
   } catch (error) {
     console.error("Erro ao atualizar:", error);
-    res.status(500).json({ error: "Erro ao atualizar registro." });
+    return responderErro(res, error, "Erro ao atualizar registro.");
   }
 };
 
@@ -187,6 +215,6 @@ export const deletar = async (req, res) => {
     });
   } catch (error) {
     console.error("Erro ao deletar:", error);
-    res.status(500).json({ error: "Erro ao deletar registro." });
+    return responderErro(res, error, "Erro ao deletar registro.");
   }
 };
