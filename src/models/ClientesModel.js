@@ -79,6 +79,42 @@ export default class ClientesModel {
     if (this.uf) data.uf = this.uf;
     if (this.ativo !== undefined) data.ativo = this.ativo;
 
+    if (!data.nome)
+      return res.status(400).json({ error: 'O campo "nome" é obrigatório!' });
+    if (!data.telefone)
+      return res
+        .status(400)
+        .json({ error: 'O campo "telefone" é obrigatório!' });
+    const telefoneExiste = await ClientesModel.verificarTelefoneUnico(data.telefone);
+    if (telefoneExiste)
+      return res
+        .status(400)
+        .json({ error: "O telefone informado já está cadastrado!" });
+    if (!data.email)
+      return res.status(400).json({ error: 'O campo "email" é obrigatório!' });
+    if (!data.cpf)
+      return res.status(400).json({ error: 'O campo "cpf" é obrigatório!' });
+    if (isNaN(data.cpf))
+      return res
+        .status(400)
+        .json({ error: 'O campo "cpf" deve conter somente números!' });
+    const cpfExiste = await ClientesModel.verificarCpfUnico(data.cpf);
+    if (cpfExiste)
+      return res
+        .status(400)
+        .json({ error: "O CPF informado já está cadastrado!" });
+
+    if (data.cpf.toString().trim().length !== 11)
+      return res
+        .status(400)
+        .json({ error: 'O campo "cpf" deve conter exatamente 11 dígitos!' });
+    if (!data.cep)
+      return res.status(400).json({ error: 'O campo "cep" é obrigatório!' });
+    if (data.cep.toString().length !== 8)
+      return res
+        .status(400)
+        .json({ error: 'O campo "cep" deve conter exatamente 8 dígitos!' });
+
     return prisma.cliente.create({ data });
   }
 

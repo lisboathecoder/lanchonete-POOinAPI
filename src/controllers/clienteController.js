@@ -37,42 +37,6 @@ export const criar = async (req, res) => {
       }
     }
 
-    if (!nome)
-      return res.status(400).json({ error: 'O campo "nome" é obrigatório!' });
-    if (!telefone)
-      return res
-        .status(400)
-        .json({ error: 'O campo "telefone" é obrigatório!' });
-    const telefoneExiste = await ClientesModel.verificarTelefoneUnico(telefone);
-    if (telefoneExiste)
-      return res
-        .status(400)
-        .json({ error: "O telefone informado já está cadastrado!" });
-    if (!email)
-      return res.status(400).json({ error: 'O campo "email" é obrigatório!' });
-    if (!cpf)
-      return res.status(400).json({ error: 'O campo "cpf" é obrigatório!' });
-    if (isNaN(cpf))
-      return res
-        .status(400)
-        .json({ error: 'O campo "cpf" deve conter somente números!' });
-    const cpfExiste = await ClientesModel.verificarCpfUnico(cpf);
-    if (cpfExiste)
-      return res
-        .status(400)
-        .json({ error: "O CPF informado já está cadastrado!" });
-
-    if (cpf.toString().trim().length !== 11)
-      return res
-        .status(400)
-        .json({ error: 'O campo "cpf" deve conter exatamente 11 dígitos!' });
-    if (!cep)
-      return res.status(400).json({ error: 'O campo "cep" é obrigatório!' });
-    if (cep.toString().length !== 8)
-      return res
-        .status(400)
-        .json({ error: 'O campo "cep" deve conter exatamente 8 dígitos!' });
-
     const cliente = new ClientesModel({
       nome,
       telefone,
