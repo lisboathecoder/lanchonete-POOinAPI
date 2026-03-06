@@ -16,8 +16,8 @@ export const criar = async (req, res) => {
         if (disponivel === false) return res.status(400).json({ error: 'O produto não pode ser adicionado com indisponível' });
 
 
-        const parsedPrice = parseInt(preco);
-        if (isNaN(parsedPrice)) {
+        const precoehNumero = parseInt(preco);
+        if (isNaN(precoehNumero)) {
             return res.status(400).json({ error: 'O preço precisa ser uma número válido'})
         };
 
