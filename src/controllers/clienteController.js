@@ -2,16 +2,6 @@ import ClientesModel from "../models/ClientesModel.js";
 import buscarEnderecoPorCep from "../utils/viaCep.js";
 import { buscarClimaViaCep, sugestaoClima } from "../utils/clima.js";
 
-const erroBancoIndisponivel = (error) => {
-  const mensagem = error?.message || "";
-
-  return (
-    error?.code === "ECONNREFUSED" ||
-    error?.name === "PrismaClientInitializationError" ||
-    mensagem.includes("ECONNREFUSED")
-  );
-};
-
 const responderErro = (res, error, mensagemPadrao) => {
   if (erroBancoIndisponivel(error)) {
     return res.status(503).json({
@@ -157,38 +147,75 @@ export const buscarClima = async (req, res) => {
 
 export const atualizar = async (req, res) => {
   try {
-    const { id } = req.params;
-    if (isNaN(id)) return res.status(400).json({ error: "ID inválido." });
-    if (!req.body) {
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
       return res
         .status(400)
-        .json({ error: "Corpo da requisição vazio. Envie os dados!" });
+        .json({ error: "ID inválido. Informe um número válido." });
     }
-    const cliente = new ClientesModel({ id: parseInt(id) });
-    const exists = await cliente.buscarPorId();
-    if (!exists) {
-      return res
-        .status(404)
-        .json({ error: "Registro não encontrado para atualizar." });
-    }
-    if (req.body.nome !== undefined) cliente.nome = req.body.nome;
-    if (req.body.telefone !== undefined) cliente.telefone = req.body.telefone;
-    if (req.body.email !== undefined) cliente.email = req.body.email;
-    if (req.body.cpf !== undefined) cliente.cpf = req.body.cpf;
-    if (req.body.cep !== undefined) cliente.cep = req.body.cep;
-    if (req.body.logradouro !== undefined)
-      cliente.logradouro = req.body.logradouro;
-    if (req.body.bairro !== undefined) cliente.bairro = req.body.bairro;
-    if (req.body.localidade !== undefined)
-      cliente.localidade = req.body.localidade;
-    if (req.body.uf !== undefined) cliente.uf = req.body.uf;
-    if (req.body.pedidos !== undefined) cliente.pedidos = req.body.pedidos;
-    if (req.body.ativo !== undefined) cliente.ativo = req.body.ativo;
 
-    const data = await cliente.atualizar();
-    res.json({
-      message: `O registro "${data.nome}" foi atualizado com sucesso!`,
-      data,
+    if (!req.body) {
+      return res.status(400).json({
+        error: "Envie pelo menos um campo para atualizar.",
+      });
+    }
+
+    let temCampoNoBody = false;
+    for (const _campo in req.body) {
+      temCampoNoBody = true;
+      break;
+    }
+
+    if (!temCampoNoBody) {
+      return res.status(400).json({
+        error: "Envie pelo menos um campo para atualizar.",
+      });
+    }
+
+    const camposPermitidos = [
+      "nome",
+      "telefone",
+      "email",
+      "cpf",
+      "cep",
+      "logradouro",
+      "bairro",
+      "localidade",
+      "uf",
+      "pedidos",
+      "ativo",
+    ];
+
+    const dadosAtualizacao = { id };
+
+    for (let i = 0; i < camposPermitidos.length; i++) {
+      const campo = camposPermitidos[i];
+      if (req.body[campo] !== undefined) {
+        dadosAtualizacao[campo] = req.body[campo];
+      }
+    }
+
+    if (dadosAtualizacao.cep !== undefined) {
+      const endereco = await buscarEnderecoPorCep(dadosAtualizacao.cep);
+      if (!endereco) {
+        return res
+          .status(400)
+          .json({ error: "CEP inválido ou não encontrado." });
+      }
+
+      dadosAtualizacao.logradouro = endereco.logradouro || null;
+      dadosAtualizacao.bairro = endereco.bairro || null;
+      dadosAtualizacao.localidade = endereco.localidade || null;
+      dadosAtualizacao.uf = endereco.uf || null;
+    }
+
+    const cliente = new ClientesModel(dadosAtualizacao);
+    const clienteAtualizado = await cliente.atualizar();
+
+    return res.status(200).json({
+      message: "O registro foi atualizado com sucesso!",
+      clienteAtualizado,
     });
   } catch (error) {
     console.error("Erro ao atualizar:", error);
