@@ -11,16 +11,31 @@ export default class ProdutosModel {
     }
 
     async criar() {
+        if (!this.nome || this.nome.trim().length < 3) {
+            throw new Error('O campo "nome" é obrigatório e precisa ter pelo menos três caracteres.');
+        }
+        if (!this.categoria) {
+            throw new Error('O campo "categoria" é obrigatório!');
+        }
+        if (this.preco === undefined || preco <= 0) {
+            throw new Error('O "preco" deve ser definido e ser maior que 0');
+        }
+        if (this.descricao.length >= 255) {
+            throw new Error('O campo "descricao" pode ter no máximo apenas 255 caracteres');
+        }
+        if (this.disponivel === false) {
+            throw new Error('O produto não pode ser adicionado com indisponível');
+        }
         return prisma.produto.create({
             data: {
                 nome: this.nome,
                 descricao: this.descricao,
                 categoria: this.categoria,
-                preco: this.preco,
-                disponivel: this.disponivel
+                preco: parseFloat(this.preco),
+                disponivel: this.disponivel ?? true
             }
         });
-    }
+        }
 
     async atualizar() {
         return prisma.produto.update({
@@ -76,8 +91,8 @@ export default class ProdutosModel {
         }
 
          if (filtro.disponivel !== undefined){
-            where.disponivel = filtro.disponivel === "true";
-           
+            where.disponivel = filtro.disponivel === true;
+
          }
 
          if(filtro.precoMin || filtro.precoMax){
@@ -92,7 +107,7 @@ export default class ProdutosModel {
             where.preco.lte = parseFloat(filtro.precoMax);
          }
          return prisma.produto.findMany({ where});
-         
+
       }
 
         static async buscarPorId(id) {
