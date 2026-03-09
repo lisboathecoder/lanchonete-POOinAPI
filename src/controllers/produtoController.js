@@ -47,18 +47,12 @@ export const criar = async (req, res) => {
 
 export const buscarTodos = async (req, res) => {
   try {
-    const produto = new ProdutosModel();
-    const listarProdutos = await produto.buscarTodos(req.query);
-
-    if (!listarProdutos || listarProdutos.length === 0) {
-      return res.status(200).json({ message: "Nenhum registro encontrado." });
-    }
-    res.json(listarProdutos);
+    const produtos = await ProdutosModel.buscarTodos();
+    res.json(produtos);
   } catch (error) {
-    console.error("Erro ao buscar:", error);
-    res.status(500).json({ error: "Erro ao buscar registros." });
+    res.status(500).json({ error: error.message });
   }
-};
+};  
 
 export const buscarPorId = async (req, res) => {
   try {

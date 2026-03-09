@@ -5,14 +5,13 @@ export default class PedidosModel {
     id = null,
     nome = null,
     clienteId = null,
-    produtos = [],
+    itens = [],
     total = 0.0,
     status = "ABERTO",
   } = {}) {
     this.id = id;
-    this.nome = nome;
     this.clienteId = clienteId;
-    this.produtos = produtos;
+    this.itens = itens;
     this.total = total;
     this.status = status;
   }
@@ -20,14 +19,14 @@ export default class PedidosModel {
   async criar() {
     return prisma.pedido.create({
       data: {
-        nome: this.nome,
         clienteId: this.clienteId,
         total: this.total,
         status: this.status,
-        produtos: {
-          connect: this.produtos.map((produtoId) => ({ id: produtoId })),
+        itens: {
+          create: this.itens,
         },
       },
+      include: { itens: { include: { produto: true } } },
     });
   }
 
@@ -35,13 +34,9 @@ export default class PedidosModel {
     return prisma.pedido.update({
       where: { id: this.id },
       data: {
-        nome: this.nome,
         clienteId: this.clienteId,
         total: this.total,
         status: this.status,
-        produtos: {
-          set: this.produtos.map((produtoId) => ({ id: produtoId })),
-        },
       },
     });
   }
@@ -53,18 +48,19 @@ export default class PedidosModel {
   static async buscarTodos(filtros = {}) {
     const where = {};
 
-    if (filtros.nome)
-      where.nome = { contains: filtros.nome, mode: "insensitive" };
     if (filtros.clienteId) where.clienteId = parseInt(filtros.clienteId);
     if (filtros.status) where.status = filtros.status;
 
-    return prisma.pedido.findMany({ where, include: { produtos: true } });
+    return prisma.pedido.findMany({
+      where,
+      include: { itens: { include: { produto: true } } },
+    });
   }
 
   static async buscarPorId(id) {
     const data = await prisma.pedido.findUnique({
       where: { id },
-      include: { produtos: true },
+      include: { itens: { include: { produto: true } } },
     });
     if (!data) return null;
     return new PedidosModel(data);

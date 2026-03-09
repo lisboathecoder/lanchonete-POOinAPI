@@ -46,7 +46,7 @@ export default class ProdutosModel {
     const itemPedidoAberto = await prisma.itemPedido.findFisrt({
       where: {
         produtoID: this.id,
-        pedido: { status: "Aberto" },
+        pedido: { status: "ABERTO" },
       },
     });
 
