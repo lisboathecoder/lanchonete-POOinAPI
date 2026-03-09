@@ -1,4 +1,4 @@
-import prisma from '../utils/prismaClient.js';
+import prisma from "../utils/prismaClient.js";
 
 export default class ProdutosModel {
     constructor({ id = null, nome, descricao, categoria, preco, disponivel } = {}) {
@@ -11,47 +11,43 @@ export default class ProdutosModel {
     }
 
     async criar() {
-        // Validações (Lançando erros para o Controller capturar)
         if (!this.nome || this.nome.trim().length < 3) {
-            throw new Error(
-                'O campo "nome" é obrigatório e precisa ter pelo menos três caracteres.',
-            );
+            return { status: 400, error: 'O campo "nome" é obrigatório e precisa ter pelo menos três caracteres.' };
         }
         if (!this.categoria) {
-            throw new Error('O campo "categoria" é obrigatório!');
+            return { status: 400, error: 'O campo "categoria" é obrigatório!' };
         }
         if (this.preco === undefined || this.preco <= 0) {
-            throw new Error('O "preco" deve ser definido e ser maior que 0');
+            return { status: 400, error: 'O "preco" deve ser definido e ser maior que 0' };
         }
         if (this.descricao && this.descricao.length >= 255) {
-            throw new Error('O campo "descricao" pode ter no máximo 255 caracteres');
+            return { status: 400, error: 'O campo "descricao" pode ter no máximo apenas 255 caracteres' };
         }
         if (this.disponivel === false) {
-            throw new Error('O produto não pode ser adicionado como indisponível');
+            return { status: 400, error: 'O produto não pode ser adicionado com indisponível' };
         }
 
-        // Execução no Prisma
-        return await prisma.produto.create({
+        return prisma.produto.create({
             data: {
                 nome: this.nome,
                 descricao: this.descricao,
                 categoria: this.categoria,
                 preco: parseFloat(this.preco),
-                disponivel: this.disponivel ?? true, // Valor padrão caso seja undefined
-            },
+                disponivel: this.disponivel ?? true
+            }
         });
     }
 
     async atualizar() {
-        return await prisma.produto.update({
-            where: { id: parseInt(this.id) },
+        return prisma.produto.update({
+            where: { id: this.id },
             data: {
                 nome: this.nome,
                 descricao: this.descricao,
                 categoria: this.categoria,
-                preco: parseFloat(this.preco),
-                disponivel: this.disponivel,
-            },
+                preco: this.preco,
+                disponivel: this.disponivel
+            }
         });
     }
 
@@ -59,59 +55,53 @@ export default class ProdutosModel {
         const itemPedidoAberto = await prisma.itemPedido.findFirst({
             where: {
                 produtoID: this.id,
-                pedido: {
-                    status: 'Aberto',
-                },
-            },
+                pedido: { status: "ABERTO" }
+            }
         });
 
         if (itemPedidoAberto) {
             return {
                 status: 400,
-                error: 'Não é possível deletar um produto vinculado a pedido aberto',
+                error: "Não é possível deletar um produto vinculado a pedido aberto"
             };
         }
 
-        await prisma.produto.delete({
-            where: { id: this.id },
+        return prisma.produto.delete({
+            where: { id: this.id }
         });
-
-        return { status: 200 };
     }
 
-    static async buscarTodos(filtro = {}) {
+    static async buscarTodos(filtros = {}) {
         const where = {};
 
-        if (filtro.nome) {
+        if (filtros.nome) {
             where.nome = {
-                contains: filtro.nome,
-                mode: 'insensitive',
+                contains: filtros.nome,
+                mode: "insensitive"
             };
         }
-        if (filtro.categoria) {
+
+        if (filtros.categoria) {
             where.categoria = {
-                contains: filtro.categoria,
-                mode: 'insensitive',
+                contains: filtros.categoria,
+                mode: "insensitive"
             };
         }
 
-        if (filtro.disponivel !== undefined) {
-            // Converte string "true"/"false" da URL para booleano real
-            where.disponivel = filtro.disponivel === 'true' || filtro.disponivel === true;
+        if (filtros.disponivel !== undefined) {
+            where.disponivel = filtros.disponivel === true;
         }
 
-        if (filtro.precoMin || filtro.precoMax) {
-            where.preco = {};
-            if (filtro.precoMin) where.preco.gte = parseFloat(filtro.precoMin);
-            if (filtro.precoMax) where.preco.lte = parseFloat(filtro.precoMax);
+        if (filtros.precoMax) {
+            where.preco = {
+                lte: parseFloat(filtros.precoMax)
+            };
         }
 
-        return await prisma.produto.findMany({ where });
+        return prisma.produto.findMany({ where });
     }
 
     static async buscarPorId(id) {
-        return await prisma.produto.findUnique({
-            where: { id: parseInt(id) },
-        });
+        return prisma.produto.findUnique({ where: { id } });
     }
 }
