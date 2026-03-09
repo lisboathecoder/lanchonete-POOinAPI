@@ -1,122 +1,79 @@
-import prisma from '../utils/prismaClient.js';
+import prisma from "../utils/prismaClient.js";
 
-export default class ItemPedido {
-    constructor({ id = null, pedidoId = null, produtoId = null, quantidade, precoUnitario } = {}) {
-        this.id = id;
-        this.pedidoId = pedidoId;
-        this.produtoId = produtoId;
-        this.quantidade = quantidade;
-        this.precoUnitario = precoUnitario;
+export default class itemPedidoModel {
+  constructor(id, pedidoId, produtoId, quantidade, precoUnitario) {
+    this.id = id;
+    this.pedidoId = pedidoId;
+    this.produtoId = produtoId;
+    this.quantidade = quantidade;
+    this.precoUnitario = precoUnitario;
+  }
+
+  async criar() {
+
+    if (!this.quantidade || this.quantidade <= 0 || this.quantidade > 99) {
+      return res.status(400).json({ error: "Quantidade deve estar entre 1 e 99" });
     }
 
-    async criar() {
-        if (this.quantidade <= 0 || this.quantidade > 99)
-            return res
-                .status(400)
-                .json({ error: 'Quantidade deve ser maior que 0 e no máximo 99.' });
+    const produto = await prisma.produto.findUnique({
+      where: { id: this.produtoId },
+    });
 
-        const pedido = await prisma.pedido.findUnique({
-            where: { id: this.pedidoId },
-        });
-
-        if (!pedido) {
-            throw new Error('Pedido não encontrado.');
-        }
-
-        if (pedido.status === 'PAGO' || pedido.status === 'CANCELADO') {
-            throw new Error('Não é possível adicionar itens a um pedido PAGO ou CANCELADO.');
-        }
-
-        const produto = await prisma.produto.findUnique({
-            where: { id: this.produtoId },
-        });
-
-        if (!produto) {
-            throw new Error('Produto não encontrado.');
-        }
-
-        if (!produto.disponivel) {
-            throw new Error('Não é possível adicionar produto indisponível ao pedido.');
-        }
-
-        const item = await prisma.itemPedido.create({
-            data: {
-                pedidoId: this.pedidoId,
-                produtoId: this.produtoId,
-                quantidade: this.quantidade,
-                precoUnitario: produto.preco,
-            },
-        });
-
-        return item;
+    if (!produto) {
+      return res.status(404).json({ error: "Produto não encontrado" });
     }
 
-    static async buscarPorId(id) {
-        return prisma.itemPedido.findUnique({
-            where: { id },
-            include: {
-                produto: true,
-            },
-        });
+    if (!produto.disponivel) {
+      return res.status(400).json({ error: "Produto não está disponível" });
     }
 
-    async atualizar() {
-        if (this.quantidade <= 0 || this.quantidade > 99) {
-            throw new Error('Quantidade deve ser maior que 0 e no máximo 99.');
-        }
 
-        const item = await prisma.itemPedido.findUnique({
-            where: { id: this.id },
-            include: { pedido: true },
-        });
+    return prisma.itemPedido.create({
+      data: {
+        pedidoId: this.pedidoId,
+        produtoId: this.produtoId,
+        quantidade: this.quantidade,
+        precoUnitario: produto.preco,
+      },
+    });
+  }
 
-        if (!item) {
-            throw new Error('ItemPedido não encontrado.');
-        }
+  async deletar(id) {
 
-        if (item.pedido.status === 'PAGO' || item.pedido.status === 'CANCELADO') {
-            throw new Error('Não é possível alterar itens de um pedido PAGO ou CANCELADO.');
-        }
+    const itemPedido = await prisma.itemPedido.findUnique({
+      where: { id },
+      include: { pedido: true },
+    });
 
-        return prisma.itemPedido.update({
-            where: { id: this.id },
-            data: {
-                quantidade: this.quantidade,
-            },
-        });
+    if (!itemPedido) {
+      return res.status(404).json({ error: "Item de pedido não encontrado" });
     }
 
-    static async deletar(id) {
-        const item = await prisma.itemPedido.findUnique({
-            where: { id },
-            include: { pedido: true },
-        });
-
-        if (!item) {
-            throw new Error('ItemPedido não encontrado.');
-        }
-
-        if (item.pedido.status === 'PAGO' || item.pedido.status === 'CANCELADO') {
-            throw new Error('Não é possível remover item de pedido PAGO ou CANCELADO.');
-        }
-
-        return prisma.itemPedido.delete({
-            where: { id },
-        });
+    if (["PAGO", "CANCELADO"].includes(itemPedido.pedido.status)) {
+      return res.status(400).json({ error: "Não é permitido remover itens de pedidos pagos ou cancelados" });
     }
 
-    static async buscarTodos() {
-        const itens = await prisma.itemPedido.findMany({
-            include: {
-                produto: true,
-                pedido: true,
-            },
-        });
+    return prisma.itemPedido.delete({
+      where: { id },
+    });
+  }
 
-        if (!itens || itens.length === 0) {
-            throw new Error('Nenhum item de pedido encontrado.');
-        }
+  static async buscarPorId(id) {
+    return prisma.itemPedido.findUnique({
+      where: { id },
+      include: {
+        pedido: true,
+        produto: true,
+      },
+    });
+  }
 
-        return itens;
-    }
+  static async buscarPorPedido(pedidoId) {
+    return prisma.itemPedido.findMany({
+      where: { pedidoId },
+      include: {
+        produto: true,
+      },
+    });
+  }
 }

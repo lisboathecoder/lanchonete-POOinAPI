@@ -1,4 +1,4 @@
-import prisma from '../utils/prismaClient.js';
+import prisma from "../utils/prismaClient.js";
 
 export default class ProdutosModel {
     constructor({ id = null, nome, descricao, categoria, preco, disponivel } = {}) {
@@ -37,41 +37,44 @@ export default class ProdutosModel {
         });
         }
 
-    async atualizar() {
-        return prisma.produto.update({
-            where: { id: this.id },
-            data: {
-                nome: this.nome,
-                descricao: this.descricao,
-                categoria: this.categoria,
-                preco: this.preco,
-                disponivel: this.disponivel
-            }
-        });
-    }
+  async criar() {
+    return prisma.produto.create({
+      data: {
+        nome: this.nome,
+        descricao: this.descricao,
+        categoria: this.categoria,
+        preco: this.preco,
+        disponivel: this.disponivel,
+      },
+    });
+  }
 
-    async deletar() {
-        const itemPedidoAberto = await prisma.itemPedido.findFirst({
-            where: {
-                produtoID: this.id,
-                pedido: {
-                    status: "Aberto"
-                },
-            },
-        });
+  async atualizar() {
+    return prisma.produto.update({
+      where: { id: this.id },
+      data: {
+        nome: this.nome,
+        descricao: this.descricao,
+        categoria: this.categoria,
+        preco: this.preco,
+        disponivel: this.disponivel,
+      },
+    });
+  }
 
-        if (itemPedidoAberto) {
-            return {
-                status: 400,
-                error: "Não é possível deletar um produto vinculado a pedido aberto"
-            };
-        }
+  async deletar() {
+    const itemPedidoAberto = await prisma.itemPedido.findFisrt({
+      where: {
+        produtoID: this.id,
+        pedido: { status: "Aberto" },
+      },
+    });
 
-        await prisma.produto.delete({
-            where: {id: this.id},
-        });
-
-        return{status:200};
+    if (itemPedidoAberto) {
+      return {
+        status: 400,
+        error: "Não é possível deletar um produto vinculado a pedido aberto",
+      };
     }
 
       static async buscarTodos(filtro = {}) {
@@ -95,13 +98,11 @@ export default class ProdutosModel {
 
          }
 
-         if(filtro.precoMin || filtro.precoMax){
-            where.preco = {}
-         }
+    return { status: 200 };
+  }
 
-         if(filtro.precoMin) {
-            where.preco.gte = parseFloat(filtro.precoMin);
-         }
+  static async buscarTodos(filtros = {}) {
+    const where = {};
 
          if (filtro.precoMax) {
             where.preco.lte = parseFloat(filtro.precoMax);
@@ -110,9 +111,7 @@ export default class ProdutosModel {
 
       }
 
-        static async buscarPorId(id) {
-            return prisma.produto.findUnique({
-                where: {id}
-            });
-        }
+  static async buscarPorId(id) {
+    return prisma.produto.findUnique({ where: { id } });
+  }
 }
