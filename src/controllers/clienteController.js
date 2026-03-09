@@ -1,4 +1,4 @@
-import ClientesModel from "../models/ClientesModel.js";
+import ClientesModel from "../models/ClienteModel.js";
 import buscarEnderecoPorCep from "../utils/viaCep.js";
 import { buscarClimaViaCep, sugestaoClima } from "../utils/clima.js";
 
@@ -103,7 +103,7 @@ export const buscarPorId = async (req, res) => {
   } catch (error) {
     console.error("Erro ao buscar:", error);
     return res.status(500).json({ error: "Erro ao buscar registro." });
- 
+
   }
 };
 
@@ -128,7 +128,7 @@ export const buscarClima = async (req, res) => {
     const clima = await buscarClimaViaCep(data.cep);
     const sugestao = sugestaoClima(clima);
     res.json({ data, clima, sugestaoClima: sugestao });
-  
+
   } catch (error) {
     console.error("Erro ao buscar clima:", error);
     return res.status(500).json({ error: "Erro ao buscar clima." });

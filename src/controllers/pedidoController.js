@@ -1,4 +1,4 @@
-import PedidoModel from "../models/PedidosModel.js";
+import PedidoModel from "../models/PedidoModel.js";
 import prisma from "../utils/prismaClient.js";
 
 export const criar = async (req, res) => {

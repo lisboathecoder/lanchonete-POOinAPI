@@ -1,4 +1,4 @@
-import ProdutosModel from "../models/ProdutosModel.js";
+import ProdutosModel from "../models/ProdutoModel.js";
 
 export const criar = async (req, res) => {
     try {
@@ -20,7 +20,7 @@ export const buscarTodos = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-};  
+};
 
 export const buscarPorId = async (req, res) => {
   try {
