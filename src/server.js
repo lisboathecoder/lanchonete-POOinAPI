@@ -1,8 +1,8 @@
 import express from 'express';
 import 'dotenv/config';
-import clientesRoutes from './routes/clientesRoute.js';
-import itemPedidosRoute from './routes/itemPedidosRoute.js';
-import pedidosRoute from './routes/pedidoRoute.js';
+import clienteRoute from './routes/clientesRoute.js';
+import itemPedidoRoute from './routes/itemPedidoRoute.js';
+import pedidoRoute from './routes/pedidoRoute.js';
 import produtoRoute from './routes/produtoRoute.js';
 import auth from './utils/apiKey.js';
 
@@ -16,9 +16,9 @@ app.get('/', (req, res) => {
 });
 
 // Rotas
-app.use('/api', auth, clientesRoutes);
-app.use('/api', auth, itemPedidosRoute);
-app.use('/api', auth, pedidosRoute);
+app.use('/api', auth, clienteRoute);
+app.use('/api', auth, itemPedidoRoute);
+app.use('/api', auth, pedidoRoute);
 app.use('/api', auth, produtoRoute);
 
 app.use((req, res) => {
