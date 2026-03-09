@@ -1,25 +1,39 @@
 import ProdutosModel from "../models/ProdutosModel.js";
 
 export const criar = async (req, res) => {
-    try {
-        if (!req.body) {
-            return res.status(400).json({
-                error: 'Corpo da requisição vazio. Envie os dados!',
-            });
-        }
-        const {nome, descricao, categoria, preco, disponivel = true } = req.body;
+  try {
+    if (!req.body) {
+      return res.status(400).json({
+        error: "Corpo da requisição vazio. Envie os dados!",
+      });
+    }
+    const { nome, descricao, categoria, preco, disponivel = true } = req.body;
 
-        if (!nome || nome.trim().length < 3) return res.status(400).json({ error: 'O campo "nome" é obrigatório e precisa ter pelo menos três caracteres.' });
-        if (!categoria) return res.status(400).json({ error: 'O campo "categoria" é obrigatório!' });
-        if (preco === undefined || preco <= 0) return res.status(400).json({ error: 'O "preco" deve ser definido e ser maior que 0' });
-         if (descricao.length >= 255) return res.status(400).json({ error: 'O campo "descricao" pode ter no máximo apenas 255 caracteres' });
-        if (disponivel === false) return res.status(400).json({ error: 'O produto não pode ser adicionado com indisponível' });
+    if (!nome)
+      return res.status(400).json({ error: 'O campo "nome" é obrigatório!' });
+    if (!categoria)
+      return res
+        .status(400)
+        .json({ error: 'O campo "categoria" é obrigatório!' });
+    if (!preco)
+      return res.status(400).json({ error: 'O campo "preco" é obrigatório!' });
+    if (disponivel === false)
+      return res
+        .status(400)
+        .json({ error: "O produto não pode ser adicionado com indisponível" });
 
+    const parsedPrice = parseInt(preco);
+    if (isNaN(parsedPrice)) {
+      return res
+        .status(400)
+        .json({ error: "O preço precisa ser uma número válido" });
+    }
 
-        const precoehNumero = parseInt(preco);
-        if (isNaN(precoehNumero)) {
-            return res.status(400).json({ error: 'O preço precisa ser uma número válido'})
-        };
+    if (preco <= 0) {
+      return res.status(400).json({
+        error: "O preço precisa ser positivo",
+      });
+    }
 
     const produto = new ProdutosModel(nome, descricao, categoria, preco, ativo);
     const data = await produto.criar();
@@ -45,8 +59,6 @@ export const buscarTodos = async (req, res) => {
     res.status(500).json({ error: "Erro ao buscar registros." });
   }
 };
-
-
 
 export const buscarPorId = async (req, res) => {
   try {
