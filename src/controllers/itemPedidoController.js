@@ -1,4 +1,4 @@
-import ItemPedido from '../models/ItensPedidoModel.js';
+import ItemPedido from '../models/ItemPedidoModel.js';
 
 export const criarItemPedido = async (req, res) => {
     try {
@@ -41,5 +41,17 @@ export const buscarItemPedidoPorId = async (req, res) => {
         res.json(itemPedido);
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+};
+
+export const atualizarItemPedido = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { quantidade } = req.body;
+        const itemPedido = new ItemPedido({ id, quantidade });
+        const itemPedidoAtualizado = await itemPedido.atualizar();
+        res.json(itemPedidoAtualizado);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 };
