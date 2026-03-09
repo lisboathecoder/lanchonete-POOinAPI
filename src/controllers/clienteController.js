@@ -2,16 +2,6 @@ import ClientesModel from "../models/ClientesModel.js";
 import buscarEnderecoPorCep from "../utils/viaCep.js";
 import { buscarClimaViaCep, sugestaoClima } from "../utils/clima.js";
 
-const responderErro = (res, error, mensagemPadrao) => {
-  if (erroBancoIndisponivel(error)) {
-    return res.status(503).json({
-      error: "Banco de dados indisponível no momento. Tente novamente em instantes.",
-    });
-  }
-
-  return res.status(500).json({ error: mensagemPadrao });
-};
-
 
 export const criar = async (req, res) => {
   try {
@@ -71,7 +61,7 @@ export const criar = async (req, res) => {
     res.status(201).json({ message: "Registro criado com sucesso!", data, clima });
   } catch (error) {
     console.error("Erro ao criar:", error);
-    return responderErro(res, error, "Erro interno ao salvar o registro.");
+    return res.status(500).json({ error: "Erro interno ao salvar o registro." });
   }
 };
 export const buscarTodos = async (req, res) => {
@@ -92,7 +82,7 @@ export const buscarTodos = async (req, res) => {
     res.json(registros);
   } catch (error) {
     console.error("Erro ao buscar:", error);
-    return responderErro(res, error, "Erro ao buscar registros.");
+    return res.status(500).json({ error: "Erro ao buscar registros." });
   }
 };
 
@@ -112,7 +102,7 @@ export const buscarPorId = async (req, res) => {
     res.json({ data });
   } catch (error) {
     console.error("Erro ao buscar:", error);
-    return responderErro(res, error, "Erro ao buscar registro.");
+    return res.status(500).json({ error: "Erro ao buscar registro." });
  
   }
 };
@@ -141,7 +131,7 @@ export const buscarClima = async (req, res) => {
   
   } catch (error) {
     console.error("Erro ao buscar clima:", error);
-    return responderErro(res, error, "Erro ao buscar clima.");
+    return res.status(500).json({ error: "Erro ao buscar clima." });
   }
 };
 
@@ -219,7 +209,7 @@ export const atualizar = async (req, res) => {
     });
   } catch (error) {
     console.error("Erro ao atualizar:", error);
-    return responderErro(res, error, "Erro ao atualizar registro.");
+    return res.status(500).json({ error: "Erro ao atualizar registro." });
   }
 };
 
@@ -242,6 +232,6 @@ export const deletar = async (req, res) => {
     });
   } catch (error) {
     console.error("Erro ao deletar:", error);
-    return responderErro(res, error, "Erro ao deletar registro.");
+    return res.status(500).json({ error: "Erro ao deletar registro." });
   }
 };
