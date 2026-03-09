@@ -11,6 +11,7 @@ export default class ProdutosModel {
     }
 
     async criar() {
+        // Validações (Lançando erros para o Controller capturar)
         if (!this.nome || this.nome.trim().length < 3) {
             throw new Error(
                 'O campo "nome" é obrigatório e precisa ter pelo menos três caracteres.',
@@ -29,13 +30,14 @@ export default class ProdutosModel {
             throw new Error('O produto não pode ser adicionado como indisponível');
         }
 
+        // Execução no Prisma
         return await prisma.produto.create({
             data: {
                 nome: this.nome,
                 descricao: this.descricao,
                 categoria: this.categoria,
                 preco: parseFloat(this.preco),
-                disponivel: this.disponivel ?? true,
+                disponivel: this.disponivel ?? true, // Valor padrão caso seja undefined
             },
         });
     }
@@ -94,6 +96,7 @@ export default class ProdutosModel {
         }
 
         if (filtro.disponivel !== undefined) {
+            // Converte string "true"/"false" da URL para booleano real
             where.disponivel = filtro.disponivel === 'true' || filtro.disponivel === true;
         }
 
