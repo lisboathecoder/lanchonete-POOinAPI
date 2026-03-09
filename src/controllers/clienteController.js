@@ -1,10 +1,27 @@
 import ClientesModel from "../models/ClientesModel.js";
+import buscarEnderecoPorCep from "../utils/viaCep.js";
+import { buscarClimaViaCep, sugestaoClima } from "../utils/clima.js";
 
-const buscarEnderecoPorCep = async (cep) => {
-  const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-  const data = await response.json();
-  return data.erro ? null : data;
+const erroBancoIndisponivel = (error) => {
+  const mensagem = error?.message || "";
+
+  return (
+    error?.code === "ECONNREFUSED" ||
+    error?.name === "PrismaClientInitializationError" ||
+    mensagem.includes("ECONNREFUSED")
+  );
 };
+
+const responderErro = (res, error, mensagemPadrao) => {
+  if (erroBancoIndisponivel(error)) {
+    return res.status(503).json({
+      error: "Banco de dados indisponível no momento. Tente novamente em instantes.",
+    });
+  }
+
+  return res.status(500).json({ error: mensagemPadrao });
+};
+
 
 export const criar = async (req, res) => {
   try {
@@ -37,42 +54,6 @@ export const criar = async (req, res) => {
       }
     }
 
-    if (!nome)
-      return res.status(400).json({ error: 'O campo "nome" é obrigatório!' });
-    if (!telefone)
-      return res
-        .status(400)
-        .json({ error: 'O campo "telefone" é obrigatório!' });
-    const telefoneExiste = await ClientesModel.verificarTelefoneUnico(telefone);
-    if (telefoneExiste)
-      return res
-        .status(400)
-        .json({ error: "O telefone informado já está cadastrado!" });
-    if (!email)
-      return res.status(400).json({ error: 'O campo "email" é obrigatório!' });
-    if (!cpf)
-      return res.status(400).json({ error: 'O campo "cpf" é obrigatório!' });
-    if (isNaN(cpf))
-      return res
-        .status(400)
-        .json({ error: 'O campo "cpf" deve conter somente números!' });
-    const cpfExiste = await ClientesModel.verificarCpfUnico(cpf);
-    if (cpfExiste)
-      return res
-        .status(400)
-        .json({ error: "O CPF informado já está cadastrado!" });
-
-    if (cpf.toString().trim().length !== 11)
-      return res
-        .status(400)
-        .json({ error: 'O campo "cpf" deve conter exatamente 11 dígitos!' });
-    if (!cep)
-      return res.status(400).json({ error: 'O campo "cep" é obrigatório!' });
-    if (cep.toString().length !== 8)
-      return res
-        .status(400)
-        .json({ error: 'O campo "cep" deve conter exatamente 8 dígitos!' });
-
     const cliente = new ClientesModel({
       nome,
       telefone,
@@ -87,11 +68,20 @@ export const criar = async (req, res) => {
       ativo,
     });
     const data = await cliente.criar();
+    let clima = null;
 
-    res.status(201).json({ message: "Registro criado com sucesso!", data });
+    if (data?.cep) {
+      try {
+        clima = await buscarClimaViaCep(data.cep);
+      } catch (error) {
+        clima = null;
+      }
+    }
+
+    res.status(201).json({ message: "Registro criado com sucesso!", data, clima });
   } catch (error) {
     console.error("Erro ao criar:", error);
-    res.status(500).json({ error: "Erro interno ao salvar o registro." });
+    return responderErro(res, error, "Erro interno ao salvar o registro.");
   }
 };
 export const buscarTodos = async (req, res) => {
@@ -112,7 +102,7 @@ export const buscarTodos = async (req, res) => {
     res.json(registros);
   } catch (error) {
     console.error("Erro ao buscar:", error);
-    res.status(500).json({ error: "Erro ao buscar registros." });
+    return responderErro(res, error, "Erro ao buscar registros.");
   }
 };
 
@@ -132,7 +122,36 @@ export const buscarPorId = async (req, res) => {
     res.json({ data });
   } catch (error) {
     console.error("Erro ao buscar:", error);
-    res.status(500).json({ error: "Erro ao buscar registro." });
+    return responderErro(res, error, "Erro ao buscar registro.");
+ 
+  }
+};
+
+export const buscarClima = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .json({ error: "O ID enviado não é um número válido." });
+    }
+    const cliente = new ClientesModel({ id: parseInt(id) });
+    const data = await cliente.buscarPorId();
+    if (!data) {
+      return res.status(404).json({ error: "Registro não encontrado." });
+    }
+    if (!data.cep) {
+      return res
+        .status(400)
+        .json({ error: "O cliente não possui CEP cadastrado." });
+    }
+    const clima = await buscarClimaViaCep(data.cep);
+    const sugestao = sugestaoClima(clima);
+    res.json({ data, clima, sugestaoClima: sugestao });
+  
+  } catch (error) {
+    console.error("Erro ao buscar clima:", error);
+    return responderErro(res, error, "Erro ao buscar clima.");
   }
 };
 
@@ -173,7 +192,7 @@ export const atualizar = async (req, res) => {
     });
   } catch (error) {
     console.error("Erro ao atualizar:", error);
-    res.status(500).json({ error: "Erro ao atualizar registro." });
+    return responderErro(res, error, "Erro ao atualizar registro.");
   }
 };
 
@@ -196,6 +215,6 @@ export const deletar = async (req, res) => {
     });
   } catch (error) {
     console.error("Erro ao deletar:", error);
-    res.status(500).json({ error: "Erro ao deletar registro." });
+    return responderErro(res, error, "Erro ao deletar registro.");
   }
 };
