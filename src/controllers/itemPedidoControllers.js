@@ -15,7 +15,7 @@ export const removerItemPedido = async (req, res) => {
     try {
         const { id } = req.params;
         const itemPedido = new ItemPedido({ id });
-        const itemPedidoRemovido = await itemPedido.deletar();
+        const itemPedidoRemovido = await itemPedido.remover();
         res.json(itemPedidoRemovido);
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -43,15 +43,3 @@ export const buscarItemPedidoPorId = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
-export const atualizarPedido = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { quantidade } = req.body;
-        const itemPedido = new ItemPedido({ id, quantidade });
-        const itemPedidoAtualizado = await itemPedido.atualizar();
-        res.json(itemPedidoAtualizado);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    };
-}
