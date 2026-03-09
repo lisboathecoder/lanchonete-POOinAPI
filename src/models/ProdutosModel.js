@@ -12,19 +12,19 @@ export default class ProdutosModel {
 
     async criar() {
         if (!this.nome || this.nome.trim().length < 3) {
-            throw new Error('O campo "nome" é obrigatório e precisa ter pelo menos três caracteres.');
+            return { status: 400, error: 'O campo "nome" é obrigatório e precisa ter pelo menos três caracteres.' };
         }
         if (!this.categoria) {
-            throw new Error('O campo "categoria" é obrigatório!');
+            return { status: 400, error: 'O campo "categoria" é obrigatório!' };
         }
         if (this.preco === undefined || this.preco <= 0) {
-            throw new Error('O "preco" deve ser definido e ser maior que 0');
+            return { status: 400, error: 'O "preco" deve ser definido e ser maior que 0' };
         }
         if (this.descricao && this.descricao.length >= 255) {
-            throw new Error('O campo "descricao" pode ter no máximo apenas 255 caracteres');
+            return { status: 400, error: 'O campo "descricao" pode ter no máximo apenas 255 caracteres' };
         }
         if (this.disponivel === false) {
-            throw new Error("O produto não pode ser adicionado com indisponível");
+            return { status: 400, error: 'O produto não pode ser adicionado com indisponível' };
         }
 
         return prisma.produto.create({
