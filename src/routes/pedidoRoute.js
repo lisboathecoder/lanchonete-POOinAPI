@@ -1,5 +1,5 @@
 import express from 'express';
-import * as controller from '../controllers/clienteController.js';
+import * as controller from '../controllers/pedidoController.js';
 
 const router = express.Router();
 

@@ -16,10 +16,10 @@ app.get('/', (req, res) => {
 });
 
 // Rotas
-app.use('/api', clientesRoutes);
-app.use('/api', itemPedidosRoute);
-app.use('/api', pedidosRoute);
-app.use('/api', produtoRoute);
+app.use('/api', auth, clientesRoutes);
+app.use('/api', auth, itemPedidosRoute);
+app.use('/api', auth, pedidosRoute);
+app.use('/api', auth, produtoRoute);
 
 app.use((req, res) => {
     res.status(404).json({ error: 'Rota não encontrada' });
